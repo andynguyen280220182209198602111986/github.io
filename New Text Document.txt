@@ -1,0 +1,44 @@
+# Voice Conversion Web App using Flask (Backend)
+
+from flask import Flask, request, jsonify, send_file
+import os
+import shutil
+
+app = Flask(__name__)
+UPLOAD_FOLDER = 'uploads'
+OUTPUT_FOLDER = 'outputs'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+# Home route
+@app.route('/')
+def index():
+    return "Voice Conversion Web App is Running!"
+
+# Upload route
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+
+    # Placeholder for AI voice conversion process
+    output_path = os.path.join(OUTPUT_FOLDER, f"converted_{file.filename}")
+    shutil.copy(file_path, output_path)  # Replace this with AI processing logic
+
+    return jsonify({"message": "File uploaded and processed", "output_file": output_path}), 200
+
+# Download route
+@app.route('/download/<filename>', methods=['GET'])
+def download_file(filename):
+    file_path = os.path.join(OUTPUT_FOLDER, filename)
+    if os.path.exists(file_path):
+        return send_file(file_path, as_attachment=True)
+    return jsonify({"error": "File not found"}), 404
+
+if __name__ == '__main__':
+    app.run(debug=True)
